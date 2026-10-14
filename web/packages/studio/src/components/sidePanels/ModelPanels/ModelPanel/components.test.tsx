@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import type { ModelEntity } from '@nemo/sdk/generated/platform/schema';
+import type { Adapter, ModelEntity } from '@nemo/sdk/generated/platform/schema';
 import {
   ModelDetailOverview,
   ModelParametersAccordion,
@@ -193,6 +193,39 @@ describe('ModelParametersAccordion', () => {
     const link = screen.getByRole('link', { name: 'View Job Details' });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', expect.stringContaining('job-123'));
+  });
+
+  it('shows the job link in the Adapter section, not under the base model, for an adapter', () => {
+    const baseWithAdapter: ModelEntity = {
+      ...minimalModelEntity,
+      name: 'qwen3-0.6b',
+      workspace: 'ws1',
+    };
+    const adapter = {
+      name: 'grumpy-purple-gorilla',
+      workspace: 'ws1',
+      fileset: 'ws1/grumpy-purple-gorilla',
+      finetuning_type: 'lora',
+      created_at: '2025-01-02T00:00:00Z',
+    } as Adapter;
+
+    render(
+      <TestProviders>
+        <ModelParametersAccordion
+          model={baseWithAdapter}
+          adapter={adapter}
+          customizationJobId="grumpy-purple-gorilla"
+        />
+      </TestProviders>
+    );
+
+    // Exactly one link: the adapter's own run. Rendering it under the base model's
+    // Customization Parameters would attribute the run to the wrong thing.
+    const links = screen.getAllByRole('link', { name: 'View Job Details' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', expect.stringContaining('grumpy-purple-gorilla'));
+
+    expect(screen.getByText('Adapter Details')).toBeInTheDocument();
   });
 
   it('renders Prompt section when model has prompt', () => {

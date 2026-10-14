@@ -140,6 +140,30 @@ export const ModelDetailOverview: FC<ModelDetailOverviewProps> = ({
   );
 };
 
+/**
+ * Link to the customization job that produced whatever the panel is currently scoped to.
+ *
+ * Rendered in the Adapter section for an adapter row and in the Customization section
+ * otherwise, so it always sits beside the thing it describes -- an adapter's run is not
+ * its base model's run, and showing it under the base's parameters reads as if it were.
+ */
+const JobDetailsLink: FC<{ workspace: string; customizationJobId: string }> = ({
+  workspace,
+  customizationJobId,
+}) => (
+  <KVPair
+    label="Job Details"
+    value={
+      <Anchor
+        href={getWorkspaceCustomizationJobDetailsRoute(workspace, customizationJobId)}
+        className="text-success"
+      >
+        View Job Details
+      </Anchor>
+    }
+  />
+);
+
 /** Optional artifact/deployment fields not on ModelEntity (e.g. from deployment config or job API) */
 export interface ModelArtifactData {
   backend_engine?: string;
@@ -265,20 +289,11 @@ export const ModelParametersAccordion = ({
                     : undefined
                 }
               />
-              {isDefined(customizationJobId) && (
-                <KVPair
-                  label="Job Details"
-                  value={
-                    <Anchor
-                      href={getWorkspaceCustomizationJobDetailsRoute(
-                        model.workspace,
-                        customizationJobId
-                      )}
-                      className="text-success"
-                    >
-                      View Job Details
-                    </Anchor>
-                  }
+              {/* An adapter row shows its own run in the Adapter section instead. */}
+              {!adapter && isDefined(customizationJobId) && (
+                <JobDetailsLink
+                  workspace={model.workspace}
+                  customizationJobId={customizationJobId}
                 />
               )}
             </Stack>
@@ -418,6 +433,12 @@ export const ModelParametersAccordion = ({
               )}
               {isDefined(adapter.created_at) && (
                 <KVPair label="Created" value={<RelativeTime datetime={adapter.created_at} />} />
+              )}
+              {isDefined(customizationJobId) && (
+                <JobDetailsLink
+                  workspace={model.workspace}
+                  customizationJobId={customizationJobId}
+                />
               )}
             </Stack>
           ),

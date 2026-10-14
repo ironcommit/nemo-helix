@@ -28,7 +28,13 @@ export const CustomizationJobListRoute: FC = () => {
     items: [{ slotLabel: 'Fine-tuning' }],
   });
 
-  const { jobName: customizationJobName } = useCustomizationJobForModel(workspace, selectedModel);
+  // Scoped to the adapter when one is selected, so the panel links to the run that
+  // produced *that* adapter rather than to whatever produced its base model.
+  const { jobName: customizationJobName } = useCustomizationJobForModel(
+    workspace,
+    selectedModel,
+    selectedAdapter
+  );
 
   return (
     <AccessibleTitle title={`Fine-tuning for ${workspace}`}>
