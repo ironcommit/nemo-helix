@@ -194,12 +194,19 @@ def _environment(
 
 
 def test_harbor_private_hooks_still_exist() -> None:
-    """The subclass overrides Harbor internals; an upgrade that moves them must fail here, not in a cluster."""
+    """The subclass overrides Harbor internals; an upgrade that moves them must fail here, not in a cluster.
+
+    The runner venv pins the qualified release (``harbor-runners/<version>.txt``); the workspace may
+    run a newer Harbor, in which case this checks the hooks survive the span up to it.
+    """
     import inspect
     from importlib.metadata import version
 
+    from packaging.version import Version
+    from scaled_evals.api.framework_versions import HARBOR_OPENSANDBOX_HARBOR_VERSION
+
     base = harbor_opensandbox.OpenSandboxEnvironment
-    assert version("harbor") == "0.20.0"
+    assert Version(version("harbor")) >= Version(HARBOR_OPENSANDBOX_HARBOR_VERSION)
     assert list(inspect.signature(base._build_network_policy).parameters) == ["self", "sdk"]
     assert list(inspect.signature(base._create_sandbox).parameters) == ["self", "sdk"]
     assert "self._metadata" in inspect.getsource(base._create_sandbox)
